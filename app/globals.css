@@ -24,6 +24,12 @@ body {
   font-family: var(--font-almarai), sans-serif;
 }
 
+select,
+option {
+  background: var(--background);
+  color: var(--foreground);
+}
+
 .mushaf-frame {
   background: #fdf8e6;
   border: 2px solid #bfa76a;

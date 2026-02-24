@@ -17,17 +17,37 @@ type StopPoint = {
 
 type JuzItem = {
   juz: number;
-  startPage: number;
-  startSura: number;
-  startAyah: number;
-  startSuraName: string;
+  startPage?: number | null;
 };
 
 type SuraItem = {
   sura: number;
   name: string;
   ayahCount: number;
-  startPage: number;
+  startPage?: number | null;
+};
+
+type TafsirResource = {
+  id: number;
+  name: string;
+  author_name: string;
+  language_name: string;
+  translated_name?: { name: string; language_name: string };
+};
+
+type RecitationResource = {
+  id: number;
+  reciter_name: string;
+  style: string | null;
+  translated_name?: { name: string; language_name: string };
+};
+
+type AyahDetails = {
+  sura: number;
+  ayah: number;
+  suraName: string;
+  text: string;
+  verseKey: string;
 };
 
 type PageAyah = {
@@ -83,6 +103,17 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
   const [viewPage, setViewPage] = useState(1);
   const [activeJuz, setActiveJuz] = useState<number | null>(null);
   const [activeSura, setActiveSura] = useState<number | null>(null);
+  const [activeAyah, setActiveAyah] = useState<AyahDetails | null>(null);
+  const [tafsirList, setTafsirList] = useState<TafsirResource[]>([]);
+  const [recitationList, setRecitationList] = useState<RecitationResource[]>([]);
+  const [selectedTafsirId, setSelectedTafsirId] = useState<number | null>(null);
+  const [selectedRecitationId, setSelectedRecitationId] = useState<number | null>(null);
+  const [tafsirHtml, setTafsirHtml] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [tafsirLoading, setTafsirLoading] = useState(false);
+  const [audioLoading, setAudioLoading] = useState(false);
+  const [tafsirError, setTafsirError] = useState<string | null>(null);
+  const [audioError, setAudioError] = useState<string | null>(null);
   const juzItems = useMemo(() => juzList, [juzList]);
   const suraItems = useMemo(() => suraList, [suraList]);
 
@@ -112,6 +143,42 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
       setPageInput(String(pageParam));
       void fetchPage(pageParam);
     }
+  }, []);
+
+  useEffect(() => {
+    const loadResources = async () => {
+      try {
+        const [tafsirResponse, recitationResponse] = await Promise.all([
+          fetch("/api/quran/resources/tafsirs"),
+          fetch("/api/quran/resources/recitations"),
+        ]);
+
+        if (tafsirResponse.ok) {
+          const tafsirData = (await tafsirResponse.json()) as { tafsirs: TafsirResource[] };
+          setTafsirList(tafsirData.tafsirs ?? []);
+          if (!selectedTafsirId && tafsirData.tafsirs?.length) {
+            const arabicTafsir = tafsirData.tafsirs.find(
+              (item) => item.language_name.toLowerCase() === "arabic",
+            );
+            setSelectedTafsirId(arabicTafsir?.id ?? tafsirData.tafsirs[0].id);
+          }
+        }
+
+        if (recitationResponse.ok) {
+          const recitationData = (await recitationResponse.json()) as {
+            recitations: RecitationResource[];
+          };
+          setRecitationList(recitationData.recitations ?? []);
+          if (!selectedRecitationId && recitationData.recitations?.length) {
+            setSelectedRecitationId(recitationData.recitations[0].id);
+          }
+        }
+      } catch {
+        // Ignore resource failures until the popup is opened.
+      }
+    };
+
+    void loadResources();
   }, []);
 
   const updateUrl = (page: number) => {
@@ -289,6 +356,84 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
     }
   };
 
+  const openAyahDetails = (ayah: PageAyah) => {
+    setActiveAyah({
+      sura: ayah.sura,
+      ayah: ayah.ayah,
+      suraName: ayah.suraName,
+      text: ayah.text,
+      verseKey: `${ayah.sura}:${ayah.ayah}`,
+    });
+  };
+
+  const closeAyahDetails = () => {
+    setActiveAyah(null);
+    setTafsirHtml(null);
+    setAudioUrl(null);
+    setTafsirError(null);
+    setAudioError(null);
+  };
+
+  useEffect(() => {
+    if (!activeAyah || !selectedTafsirId) {
+      return;
+    }
+
+    const loadTafsir = async () => {
+      setTafsirLoading(true);
+      setTafsirError(null);
+      setTafsirHtml(null);
+
+      try {
+        const response = await fetch(
+          `/api/quran/tafsir?tafsirId=${selectedTafsirId}&verseKey=${activeAyah.verseKey}`,
+        );
+        if (!response.ok) {
+          throw new Error("tafsir");
+        }
+
+        const data = (await response.json()) as { text: string };
+        setTafsirHtml(data.text);
+      } catch {
+        setTafsirError("تعذر تحميل التفسير المختار.");
+      } finally {
+        setTafsirLoading(false);
+      }
+    };
+
+    void loadTafsir();
+  }, [activeAyah, selectedTafsirId]);
+
+  useEffect(() => {
+    if (!activeAyah || !selectedRecitationId) {
+      return;
+    }
+
+    const loadAudio = async () => {
+      setAudioLoading(true);
+      setAudioError(null);
+      setAudioUrl(null);
+
+      try {
+        const response = await fetch(
+          `/api/quran/recitation?recitationId=${selectedRecitationId}&verseKey=${activeAyah.verseKey}`,
+        );
+        if (!response.ok) {
+          throw new Error("audio");
+        }
+
+        const data = (await response.json()) as { url: string };
+        setAudioUrl(data.url);
+      } catch {
+        setAudioError("تعذر تحميل التلاوة المختارة.");
+      } finally {
+        setAudioLoading(false);
+      }
+    };
+
+    void loadAudio();
+  }, [activeAyah, selectedRecitationId]);
+
   const pagedContent = useMemo(() => {
     if (!contentAyahs) {
       return { totalViewPages: 0, items: [] as PageAyah[] };
@@ -367,7 +512,9 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
                     className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold transition-colors hover:bg-black/5 dark:hover:bg-white/10"
                   >
                     <span>الجزء {juz.juz}</span>
-                    <span className="text-xs text-foreground/60">صفحة {juz.startPage}</span>
+                    {juz.startPage ? (
+                      <span className="text-xs text-foreground/60">صفحة {juz.startPage}</span>
+                    ) : null}
                   </button>
                 ))}
               </div>
@@ -449,7 +596,7 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
                         setPagesCount(Number(event.target.value));
                         setViewPage(1);
                       }}
-                      className="rounded-md border px-2 py-1 text-xs"
+                      className="rounded-md border bg-background px-2 py-1 text-xs text-foreground"
                     >
                       <option value={20}>20</option>
                       <option value={10}>10</option>
@@ -496,7 +643,14 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
                             </div>
                           )}
                           <span id={`ayah-${ayah.sura}-${ayah.ayah}`} className="ml-1 inline">
-                            {ayah.text}
+                            <button
+                              type="button"
+                              onClick={() => openAyahDetails(ayah)}
+                              className="inline cursor-pointer select-none transition-colors hover:text-primary/80 dark:hover:text-primary/80"
+                              aria-label={`عرض تفسير وتلاوة ${ayah.suraName} آية ${ayah.ayah}`}
+                            >
+                              {ayah.text}
+                            </button>
                             <button
                               type="button"
                               onClick={() =>
@@ -566,11 +720,85 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
           </div>
 
           <div className="text-xs text-foreground/60">
-            النص القرآني من مشروع <a className="underline" href="https://tanzil.net/">Tanzil</a> وفق شروط الاستخدام.
+            النص القرآني من <a className="underline" href="https://quran.com/">Quran.com</a>.
           </div>
 
         </section>
       </div>
+
+      {activeAyah && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-3xl max-h-[80vh] overflow-y-auto rounded-lg bg-background p-5 text-right">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold">تفسير وصوت</h3>
+              <button
+                type="button"
+                onClick={closeAyahDetails}
+                className="rounded-full border px-2 py-0.5 text-xs"
+                aria-label="إغلاق"
+              >
+                ×
+              </button>
+            </div>
+            <p className="mt-2 text-sm text-foreground/70">
+              سورة {activeAyah.suraName} • آية {activeAyah.ayah}
+            </p>
+            <div className="mt-3 rounded-md border p-3 text-sm leading-7">{activeAyah.text}</div>
+
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="text-sm font-semibold">التفسير</h4>
+                  <select
+                    value={selectedTafsirId ?? ""}
+                    onChange={(event) => setSelectedTafsirId(Number(event.target.value))}
+                    className="rounded-md border bg-background px-2 py-1 text-xs text-foreground"
+                  >
+                    {tafsirList.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} ({item.language_name})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {tafsirLoading && <div className="text-xs text-foreground/70">جار التحميل...</div>}
+                {tafsirError && <div className="text-xs text-red-600">{tafsirError}</div>}
+                {!tafsirLoading && !tafsirError && tafsirHtml && (
+                  <div
+                    className="text-sm leading-7"
+                    dangerouslySetInnerHTML={{ __html: tafsirHtml }}
+                  />
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="text-sm font-semibold">التلاوة</h4>
+                  <select
+                    value={selectedRecitationId ?? ""}
+                    onChange={(event) => setSelectedRecitationId(Number(event.target.value))}
+                    className="rounded-md border bg-background px-2 py-1 text-xs text-foreground"
+                  >
+                    {recitationList.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.reciter_name}
+                        {item.style ? ` - ${item.style}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {audioLoading && <div className="text-xs text-foreground/70">جار التحميل...</div>}
+                {audioError && <div className="text-xs text-red-600">{audioError}</div>}
+                {!audioLoading && !audioError && audioUrl && (
+                  <audio controls className="w-full">
+                    <source src={audioUrl} />
+                  </audio>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {pendingStop && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
