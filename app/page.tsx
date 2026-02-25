@@ -1,10 +1,46 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://noor-alquran.vhmedvbdelvziz.xyz";
+
+export const metadata: Metadata = {
+  title: "الرئيسية",
+  description:
+    "نور القرآن: منصة عربية تجمع قراءة القرآن الكريم، مواعيد الصلاة حسب المدينة، والأذكار اليومية.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "نور القرآن",
+    description:
+      "اقرأ القرآن الكريم وتابع مواعيد الصلاة وتصفح الأذكار اليومية من مكان واحد.",
+    url: siteUrl,
+    images: ["/logo.png"],
+  },
+};
+
 export default function Home() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "نور القرآن",
+    url: siteUrl,
+    inLanguage: "ar",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${siteUrl}/quran`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <SiteHeader />
       <section className="border-b bg-background">
         <div className="mx-auto flex max-w-6xl items-center justify-center px-4 py-10 sm:py-12">

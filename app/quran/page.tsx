@@ -1,6 +1,16 @@
 import { SiteHeader } from "@/components/site-header";
 import { QuranPage } from "@/components/quran-page";
 import { getChapters } from "@/lib/quran-api";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "القرآن الكريم",
+  description:
+    "اقرأ القرآن الكريم كاملًا مع تجربة عرض مريحة وإمكانية الوصول إلى السور والأجزاء بسهولة.",
+  alternates: {
+    canonical: "/quran",
+  },
+};
 
 type JuzItem = {
   juz: number;

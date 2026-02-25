@@ -4,6 +4,9 @@ import "./globals.css";
 import { PWAInstaller } from "@/components/pwa-installer";
 import { SiteFooter } from "@/components/site-footer";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://noor-alquran.vhmedvbdelvziz.xyz";
+const siteName = "Noor Al-Quran | نور القرآن";
+
 const almarai = Almarai({
   variable: "--font-almarai",
   subsets: ["arabic"],
@@ -11,8 +14,63 @@ const almarai = Almarai({
 });
 
 export const metadata: Metadata = {
-  title: "Noor Al-Quran - نور القرآن",
-  description: "تطبيق قرآن حديث - اقرأ القرآن الكريم مع التفاسير والتلاوات",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: siteName,
+    template: "%s | نور القرآن",
+  },
+  description:
+    "اقرأ القرآن الكريم، تصفّح الأذكار اليومية، وتابع مواعيد الصلاة الدقيقة حسب مدينتك في تجربة عربية بسيطة وسريعة.",
+  applicationName: "نور القرآن",
+  keywords: [
+    "القرآن الكريم",
+    "نور القرآن",
+    "مواعيد الصلاة",
+    "الأذكار",
+    "تفسير القرآن",
+    "تلاوات القرآن",
+    "Quran",
+    "Prayer Times",
+    "Azkar",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "ar_EG",
+    url: siteUrl,
+    siteName,
+    title: siteName,
+    description:
+      "القرآن الكريم، الأذكار، ومواعيد الصلاة الدقيقة في موقع واحد مناسب للجوال والديسكتوب.",
+    images: [
+      {
+        url: "/logo.png",
+        width: 512,
+        height: 512,
+        alt: "شعار نور القرآن",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: siteName,
+    description:
+      "القرآن الكريم، الأذكار، ومواعيد الصلاة الدقيقة في موقع واحد مناسب للجوال والديسكتوب.",
+    images: ["/logo.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
