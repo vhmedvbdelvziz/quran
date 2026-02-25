@@ -29,13 +29,13 @@ export function SiteHeader() {
               <Link href="/quran" className="whitespace-nowrap transition-opacity hover:opacity-70">
                 القران الكريم
               </Link>
-              <Link href="#" className="whitespace-nowrap transition-opacity hover:opacity-70">
+              <Link href="/prayer-times" className="whitespace-nowrap transition-opacity hover:opacity-70">
                 مواعيد الصلاه
               </Link>
-              <Link href="#" className="whitespace-nowrap transition-opacity hover:opacity-70">
+              <Link href="/azkar" className="whitespace-nowrap transition-opacity hover:opacity-70">
                 الاذكار
               </Link>
-              <Link href="#" className="whitespace-nowrap transition-opacity hover:opacity-70">
+              <Link href="/contact" className="whitespace-nowrap transition-opacity hover:opacity-70">
                 اتصل بنا
               </Link>
             </nav>
@@ -107,21 +107,21 @@ export function SiteHeader() {
               القران الكريم
             </Link>
             <Link
-              href="#"
+              href="/prayer-times"
               className="rounded-md px-3 py-2 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
               onClick={() => setIsMenuOpen(false)}
             >
               مواعيد الصلاه
             </Link>
             <Link
-              href="#"
+              href="/azkar"
               className="rounded-md px-3 py-2 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
               onClick={() => setIsMenuOpen(false)}
             >
               الاذكار
             </Link>
             <Link
-              href="#"
+              href="/contact"
               className="rounded-md px-3 py-2 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
               onClick={() => setIsMenuOpen(false)}
             >

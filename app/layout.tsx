@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Almarai } from "next/font/google";
 import "./globals.css";
 import { PWAInstaller } from "@/components/pwa-installer";
+import { SiteFooter } from "@/components/site-footer";
 
 const almarai = Almarai({
   variable: "--font-almarai",
@@ -52,6 +53,7 @@ export default function RootLayout({
       <body className={`${almarai.variable} antialiased bg-background text-foreground`}>
         <PWAInstaller />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );
