@@ -1,0 +1,38 @@
+{
+  "name": "نور القرآن - Noor Al-Quran",
+  "short_name": "نور القرآن",
+  "description": "تطبيق قرآن حديث - اقرأ القرآن الكريم مع التفاسير والتلاوات",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#1f2937",
+  "dir": "rtl",
+  "lang": "ar",
+  "categories": ["books", "education", "religion"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "اقرأ الآن",
+      "short_name": "القراءة",
+      "description": "اقرأ القرآن الكريم",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/logo.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false
+}

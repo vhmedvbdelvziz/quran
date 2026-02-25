@@ -18,16 +18,53 @@
   --font-sans: var(--font-almarai);
 }
 
+* {
+  /* Improve tap highlighting on mobile */
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  /* Prevent zooming on input focus on iOS */
+  font-size: 16px;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-almarai), sans-serif;
+  /* Improve font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* Touch-friendly button sizes (min 44x44px for accessibility) */
+button,
+select {
+  min-height: 44px;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+/* Improve select/option styling */
 select,
 option {
   background: var(--background);
   color: var(--foreground);
+  /* Prevent iOS from zooming on select focus */
+  font-size: 16px;
+}
+
+/* Better input focus styles for mobile */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--background), 0 0 0 5px var(--foreground);
+}
+
+/* Prevent double tap zoom on buttons */
+button {
+  touch-action: manipulation;
 }
 
 .mushaf-frame {

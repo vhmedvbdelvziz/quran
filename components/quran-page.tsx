@@ -108,12 +108,16 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
   const [recitationList, setRecitationList] = useState<RecitationResource[]>([]);
   const [selectedTafsirId, setSelectedTafsirId] = useState<number | null>(null);
   const [selectedRecitationId, setSelectedRecitationId] = useState<number | null>(null);
+  const [selectedSuraRecitationId, setSelectedSuraRecitationId] = useState<number | null>(null);
   const [tafsirHtml, setTafsirHtml] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [tafsirLoading, setTafsirLoading] = useState(false);
   const [audioLoading, setAudioLoading] = useState(false);
   const [tafsirError, setTafsirError] = useState<string | null>(null);
   const [audioError, setAudioError] = useState<string | null>(null);
+  const [suraAudioUrl, setSuraAudioUrl] = useState<string | null>(null);
+  const [suraAudioLoading, setSuraAudioLoading] = useState(false);
+  const [suraAudioError, setSuraAudioError] = useState<string | null>(null);
   const juzItems = useMemo(() => juzList, [juzList]);
   const suraItems = useMemo(() => suraList, [suraList]);
 
@@ -171,6 +175,9 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
           setRecitationList(recitationData.recitations ?? []);
           if (!selectedRecitationId && recitationData.recitations?.length) {
             setSelectedRecitationId(recitationData.recitations[0].id);
+          }
+          if (!selectedSuraRecitationId && recitationData.recitations?.length) {
+            setSelectedSuraRecitationId(recitationData.recitations[0].id);
           }
         }
       } catch {
@@ -434,6 +441,39 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
     void loadAudio();
   }, [activeAyah, selectedRecitationId]);
 
+  useEffect(() => {
+    if (!isSuraView || !activeSura || !selectedSuraRecitationId) {
+      setSuraAudioUrl(null);
+      setSuraAudioError(null);
+      setSuraAudioLoading(false);
+      return;
+    }
+
+    const loadSuraAudio = async () => {
+      setSuraAudioLoading(true);
+      setSuraAudioError(null);
+      setSuraAudioUrl(null);
+
+      try {
+        const response = await fetch(
+          `/api/quran/chapter-recitation?recitationId=${selectedSuraRecitationId}&sura=${activeSura}`,
+        );
+        if (!response.ok) {
+          throw new Error("chapter-audio");
+        }
+
+        const data = (await response.json()) as { url: string };
+        setSuraAudioUrl(data.url);
+      } catch {
+        setSuraAudioError("تعذر تحميل تلاوة السورة كاملة لهذا القارئ.");
+      } finally {
+        setSuraAudioLoading(false);
+      }
+    };
+
+    void loadSuraAudio();
+  }, [isSuraView, activeSura, selectedSuraRecitationId]);
+
   const pagedContent = useMemo(() => {
     if (!contentAyahs) {
       return { totalViewPages: 0, items: [] as PageAyah[] };
@@ -470,19 +510,19 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
   }, [pendingScrollId, contentAyahs, viewPage, pagesCount]);
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6" dir="rtl">
-      <div className="grid gap-6 lg:grid-cols-[3fr_7fr]">
-        <aside className="rounded-lg border p-4 sm:p-6">
-          <div className="flex items-center justify-between">
+    <main className="mx-auto w-full max-w-6xl px-3 py-6 sm:px-4 sm:py-8 md:px-6 md:py-10" dir="rtl">
+      <div className="grid gap-4 lg:gap-6 lg:grid-cols-[minmax(0,_300px)_1fr]">
+        <aside className="rounded-lg border p-3 sm:p-4 md:p-6 order-2 lg:order-1">
+          <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-start justify-between gap-3 sm:gap-2">
             <h2 className="text-base font-semibold">طريقة العرض</h2>
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-2 text-xs w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setViewMode("juz")}
-                className={`rounded-full px-3 py-1 transition-colors ${
+                className={`flex-1 sm:flex-none rounded-full px-3 py-2 transition-colors text-sm sm:text-xs ${
                   viewMode === "juz"
                     ? "bg-foreground text-background"
-                    : "border text-foreground"
+                    : "border text-foreground hover:bg-black/5 dark:hover:bg-white/10"
                 }`}
               >
                 أجزاء
@@ -490,10 +530,10 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
               <button
                 type="button"
                 onClick={() => setViewMode("sura")}
-                className={`rounded-full px-3 py-1 transition-colors ${
+                className={`flex-1 sm:flex-none rounded-full px-3 py-2 transition-colors text-sm sm:text-xs ${
                   viewMode === "sura"
                     ? "bg-foreground text-background"
-                    : "border text-foreground"
+                    : "border text-foreground hover:bg-black/5 dark:hover:bg-white/10"
                 }`}
               >
                 سور
@@ -509,7 +549,7 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
                     key={juz.juz}
                     type="button"
                     onClick={() => fetchJuz(juz.juz)}
-                    className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                    className="flex w-full items-center justify-between rounded-md border px-3 py-2.5 sm:py-2 text-sm font-semibold transition-colors active:bg-black/10 dark:active:bg-white/20 hover:bg-black/5 dark:hover:bg-white/10"
                   >
                     <span>الجزء {juz.juz}</span>
                     {juz.startPage ? (
@@ -527,7 +567,7 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
                     key={sura.sura}
                     type="button"
                     onClick={() => fetchSura(sura.sura)}
-                    className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                    className="flex w-full items-center justify-between rounded-md border px-3 py-2.5 sm:py-2 text-sm font-semibold transition-colors active:bg-black/10 dark:active:bg-white/20 hover:bg-black/5 dark:hover:bg-white/10"
                   >
                     <span>سورة {sura.name}</span>
                     <span className="text-xs text-foreground/60">{sura.ayahCount} آية</span>
@@ -538,8 +578,8 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
           </div>
         </aside>
 
-        <section className="space-y-6">
-          <div className="rounded-lg border p-4 sm:p-6">
+        <section className="space-y-4 sm:space-y-6 order-1 lg:order-2">
+          <div className="rounded-lg border p-3 sm:p-4 md:p-6">
             <div className="mt-4 rounded-md border p-3 sm:p-4">
               <h3 className="text-sm font-semibold">المحفوظات</h3>
               {stopPoints.length === 0 ? (
@@ -606,6 +646,38 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
                 )}
               </div>
             </div>
+            {isSuraView && (
+              <div className="mt-3 rounded-md border p-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <h3 className="text-sm font-semibold">تشغيل السورة كاملة</h3>
+                  <label className="flex items-center gap-2 text-xs">
+                    <span>القارئ</span>
+                    <select
+                      value={selectedSuraRecitationId ?? ""}
+                      onChange={(event) => setSelectedSuraRecitationId(Number(event.target.value))}
+                      className="rounded-md border bg-background px-2 py-1 text-xs text-foreground"
+                      disabled={recitationList.length === 0}
+                    >
+                      {recitationList.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.reciter_name}
+                          {item.style ? ` - ${item.style}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                {suraAudioLoading && (
+                  <div className="mt-2 text-xs text-foreground/70">جار تحميل تلاوة السورة...</div>
+                )}
+                {suraAudioError && <div className="mt-2 text-xs text-red-600">{suraAudioError}</div>}
+                {!suraAudioLoading && !suraAudioError && suraAudioUrl && (
+                  <audio controls className="mt-3 w-full">
+                    <source src={suraAudioUrl} />
+                  </audio>
+                )}
+              </div>
+            )}
             {isPageView && (
               <div className="mt-4 flex items-center justify-between gap-3 text-xs">
                 <button
@@ -727,14 +799,14 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
       </div>
 
       {activeAyah && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-3xl max-h-[80vh] overflow-y-auto rounded-lg bg-background p-5 text-right">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold">تفسير وصوت</h3>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-3xl max-h-[85vh] sm:max-h-[80vh] overflow-y-auto rounded-t-lg sm:rounded-lg bg-background p-4 sm:p-6 text-right">
+            <div className="flex items-center justify-between gap-4">
+              <h3 className="text-base font-semibold flex-1">تفسير وصوت</h3>
               <button
                 type="button"
                 onClick={closeAyahDetails}
-                className="rounded-full border px-2 py-0.5 text-xs"
+                className="rounded-full border px-2.5 py-1.5 sm:px-2 sm:py-0.5 text-sm sm:text-xs min-w-10 min-h-10 sm:min-w-auto sm:min-h-auto active:bg-black/10 dark:active:bg-white/20"
                 aria-label="إغلاق"
               >
                 ×
@@ -745,14 +817,14 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
             </p>
             <div className="mt-3 rounded-md border p-3 text-sm leading-7">{activeAyah.text}</div>
 
-            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div className="mt-4 grid gap-4 grid-cols-1 lg:grid-cols-2">
               <div className="space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <h4 className="text-sm font-semibold">التفسير</h4>
                   <select
                     value={selectedTafsirId ?? ""}
                     onChange={(event) => setSelectedTafsirId(Number(event.target.value))}
-                    className="rounded-md border bg-background px-2 py-1 text-xs text-foreground"
+                    className="rounded-md border bg-background px-3 py-2.5 sm:px-2 sm:py-1 text-sm sm:text-xs text-foreground w-full sm:w-auto"
                   >
                     {tafsirList.map((item) => (
                       <option key={item.id} value={item.id}>
@@ -772,12 +844,12 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
               </div>
 
               <div className="space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <h4 className="text-sm font-semibold">التلاوة</h4>
                   <select
                     value={selectedRecitationId ?? ""}
                     onChange={(event) => setSelectedRecitationId(Number(event.target.value))}
-                    className="rounded-md border bg-background px-2 py-1 text-xs text-foreground"
+                    className="rounded-md border bg-background px-3 py-2.5 sm:px-2 sm:py-1 text-sm sm:text-xs text-foreground w-full sm:w-auto"
                   >
                     {recitationList.map((item) => (
                       <option key={item.id} value={item.id}>
@@ -801,24 +873,24 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
       )}
 
       {pendingStop && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-lg bg-background p-4 text-right">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-t-lg sm:rounded-lg bg-background p-4 sm:p-6 text-right">
             <h3 className="text-base font-semibold">نقطة التوقف</h3>
             <p className="mt-2 text-sm text-foreground/70">
               عاوز توقف قراءه لحد هنا؟ ({pendingStop.suraName} - آية {pendingStop.ayah})
             </p>
-            <div className="mt-4 flex justify-end gap-2">
+            <div className="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setPendingStop(null)}
-                className="rounded-md border px-3 py-2 text-xs font-semibold"
+                className="rounded-md border px-4 py-2.5 sm:px-3 sm:py-2 text-sm sm:text-xs font-semibold transition-colors active:bg-black/10 dark:active:bg-white/20"
               >
                 إلغاء
               </button>
               <button
                 type="button"
                 onClick={handleSaveStop}
-                className="rounded-md bg-foreground px-3 py-2 text-xs font-semibold text-background"
+                className="rounded-md bg-foreground px-4 py-2.5 sm:px-3 sm:py-2 text-sm sm:text-xs font-semibold text-background transition-colors active:opacity-80"
               >
                 حفظ
               </button>
