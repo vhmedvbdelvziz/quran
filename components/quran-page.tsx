@@ -511,15 +511,128 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
 
   return (
     <main className="mx-auto w-full max-w-6xl px-3 py-6 sm:px-4 sm:py-8 md:px-6 md:py-10" dir="rtl">
-      <div className="grid gap-4 lg:gap-6 lg:grid-cols-[minmax(0,_300px)_1fr]">
-        <aside className="rounded-lg border p-3 sm:p-4 md:p-6 order-2 lg:order-1">
-          <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-start justify-between gap-3 sm:gap-2">
+      {/* المحفوظات - في الأعلى */}
+      <div className="rounded-lg border p-3 sm:p-4 md:p-6 mb-4 sm:mb-6">
+        <div className="mt-4 rounded-md border p-3 sm:p-4">
+          <h3 className="text-sm font-semibold">المحفوظات</h3>
+          {stopPoints.length === 0 ? (
+            <div className="mt-2 text-sm text-foreground/70">لا يوجد</div>
+          ) : (
+            <div className="mt-3 space-y-2">
+              {stopPoints.map((item, index) => (
+                <div
+                  key={`${item.sura}-${item.ayah}-${index}`}
+                  className="flex items-center justify-between rounded-md border px-3 py-2 text-xs"
+                >
+                  <button
+                    type="button"
+                    onClick={() => scrollToStopPoint(item)}
+                    className="text-right"
+                  >
+                    وقفت عند سورة {item.suraName} آية {item.ayah}
+                    <div className="text-[11px] text-foreground/70">
+                      {item.contextType} {item.contextTitle ?? ""}
+                    </div>
+                    {item.contextMode === "juz" && (
+                      <div className="text-[11px] text-foreground/70">
+                        تقسيم الجزء: {item.pagesCount ?? 20} صفحات • صفحة العرض: {item.viewPage ?? 1}
+                      </div>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPendingDeleteIndex(index)}
+                    className="rounded-full border px-2 py-0.5 text-[11px]"
+                    aria-label="حذف المحفوظ"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
+      </div>
+
+      {/* طريقة العرض - موبايل فقط (md:hidden) */}
+      <div className="rounded-lg border p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:hidden">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h2 className="text-base font-semibold">طريقة العرض</h2>
+          <div className="flex items-center gap-2 text-xs w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setViewMode("juz")}
+              className={`flex-1 sm:flex-none rounded-full px-3 py-2 transition-colors text-sm sm:text-xs ${
+                viewMode === "juz"
+                  ? "bg-foreground text-background"
+                  : "border text-foreground hover:bg-black/5 dark:hover:bg-white/10"
+              }`}
+            >
+              أجزاء
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("sura")}
+              className={`flex-1 sm:flex-none rounded-full px-3 py-2 transition-colors text-sm sm:text-xs ${
+                viewMode === "sura"
+                  ? "bg-foreground text-background"
+                  : "border text-foreground hover:bg-black/5 dark:hover:bg-white/10"
+              }`}
+            >
+              سور
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-2">
+          {viewMode === "juz" && (
+            <div className="space-y-2">
+              {juzItems.map((juz) => (
+                <button
+                  key={juz.juz}
+                  type="button"
+                  onClick={() => fetchJuz(juz.juz)}
+                  className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold transition-colors active:bg-black/10 dark:active:bg-white/20 hover:bg-black/5 dark:hover:bg-white/10"
+                >
+                  <span>الجزء {juz.juz}</span>
+                  {juz.startPage ? (
+                    <span className="text-xs text-foreground/60">صفحة {juz.startPage}</span>
+                  ) : null}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {viewMode === "sura" && (
+            <div className="space-y-2">
+              {suraItems.map((sura) => (
+                <button
+                  key={sura.sura}
+                  type="button"
+                  onClick={() => fetchSura(sura.sura)}
+                  className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold transition-colors active:bg-black/10 dark:active:bg-white/20 hover:bg-black/5 dark:hover:bg-white/10"
+                >
+                  <span>سورة {sura.name}</span>
+                  <span className="text-xs text-foreground/60">{sura.ayahCount} آية</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Grid Layout: Sidebar + Content - desktop فقط (hidden md:grid) */}
+      <div className="hidden md:grid gap-4 lg:gap-6 lg:grid-cols-[minmax(0,_300px)_1fr]">
+        {/* Sidebar - طريقة العرض على اليمين - desktop فقط */}
+        <aside className="rounded-lg border p-3 sm:p-4 md:p-6 h-fit lg:sticky lg:top-4">
+          <div className="flex flex-col md:flex-col items-start md:items-start justify-between gap-3">
             <h2 className="text-base font-semibold">طريقة العرض</h2>
-            <div className="flex items-center gap-2 text-xs w-full sm:w-auto">
+            <div className="flex items-center gap-2 text-xs w-full">
               <button
                 type="button"
                 onClick={() => setViewMode("juz")}
-                className={`flex-1 sm:flex-none rounded-full px-3 py-2 transition-colors text-sm sm:text-xs ${
+                className={`flex-1 rounded-full px-3 py-2 transition-colors text-xs ${
                   viewMode === "juz"
                     ? "bg-foreground text-background"
                     : "border text-foreground hover:bg-black/5 dark:hover:bg-white/10"
@@ -530,7 +643,7 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
               <button
                 type="button"
                 onClick={() => setViewMode("sura")}
-                className={`flex-1 sm:flex-none rounded-full px-3 py-2 transition-colors text-sm sm:text-xs ${
+                className={`flex-1 rounded-full px-3 py-2 transition-colors text-xs ${
                   viewMode === "sura"
                     ? "bg-foreground text-background"
                     : "border text-foreground hover:bg-black/5 dark:hover:bg-white/10"
@@ -549,7 +662,7 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
                     key={juz.juz}
                     type="button"
                     onClick={() => fetchJuz(juz.juz)}
-                    className="flex w-full items-center justify-between rounded-md border px-3 py-2.5 sm:py-2 text-sm font-semibold transition-colors active:bg-black/10 dark:active:bg-white/20 hover:bg-black/5 dark:hover:bg-white/10"
+                    className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold transition-colors active:bg-black/10 dark:active:bg-white/20 hover:bg-black/5 dark:hover:bg-white/10"
                   >
                     <span>الجزء {juz.juz}</span>
                     {juz.startPage ? (
@@ -567,7 +680,7 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
                     key={sura.sura}
                     type="button"
                     onClick={() => fetchSura(sura.sura)}
-                    className="flex w-full items-center justify-between rounded-md border px-3 py-2.5 sm:py-2 text-sm font-semibold transition-colors active:bg-black/10 dark:active:bg-white/20 hover:bg-black/5 dark:hover:bg-white/10"
+                    className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold transition-colors active:bg-black/10 dark:active:bg-white/20 hover:bg-black/5 dark:hover:bg-white/10"
                   >
                     <span>سورة {sura.name}</span>
                     <span className="text-xs text-foreground/60">{sura.ayahCount} آية</span>
@@ -578,50 +691,8 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
           </div>
         </aside>
 
-        <section className="space-y-4 sm:space-y-6 order-1 lg:order-2">
-          <div className="rounded-lg border p-3 sm:p-4 md:p-6">
-            <div className="mt-4 rounded-md border p-3 sm:p-4">
-              <h3 className="text-sm font-semibold">المحفوظات</h3>
-              {stopPoints.length === 0 ? (
-                <div className="mt-2 text-sm text-foreground/70">لا يوجد</div>
-              ) : (
-                <div className="mt-3 space-y-2">
-                  {stopPoints.map((item, index) => (
-                    <div
-                      key={`${item.sura}-${item.ayah}-${index}`}
-                      className="flex items-center justify-between rounded-md border px-3 py-2 text-xs"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => scrollToStopPoint(item)}
-                        className="text-right"
-                      >
-                        وقفت عند سورة {item.suraName} آية {item.ayah}
-                        <div className="text-[11px] text-foreground/70">
-                          {item.contextType} {item.contextTitle ?? ""}
-                        </div>
-                        {item.contextMode === "juz" && (
-                          <div className="text-[11px] text-foreground/70">
-                            تقسيم الجزء: {item.pagesCount ?? 20} صفحات • صفحة العرض: {item.viewPage ?? 1}
-                          </div>
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPendingDeleteIndex(index)}
-                        className="rounded-full border px-2 py-0.5 text-[11px]"
-                        aria-label="حذف المحفوظ"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
-          </div>
-
+        {/* Main Content */}
+        <section className="space-y-4 sm:space-y-6">
           <div className="rounded-lg border p-4 sm:p-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-lg font-semibold">{contentTitle ?? "نص الصفحة"}</h2>
@@ -794,7 +865,6 @@ export function QuranPage({ juzList, suraList, totalPages }: QuranPageProps) {
           <div className="text-xs text-foreground/60">
             النص القرآني من <a className="underline" href="https://quran.com/">Quran.com</a>.
           </div>
-
         </section>
       </div>
 

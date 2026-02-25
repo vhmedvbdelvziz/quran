@@ -244,29 +244,50 @@ export default function AzkarPage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <div className="mx-auto flex max-w-7xl gap-6 px-4 py-8">
-        {/* Sidebar - Categories (على اليمين) */}
-        <aside className="w-64 shrink-0">
-          <div className="sticky top-8 space-y-2 rounded-lg border bg-card p-4">
-            <h2 className="mb-4 text-lg font-bold">الأقسام</h2>
+      <div className="mx-auto max-w-7xl px-4 py-8">
+        {/* Category Tabs - على الاجهزة الصغيرة، sidebar على الأجهزة الكبيرة */}
+        <div className="mb-6">
+          <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:hidden">
             {AZKAR_DATA.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`w-full rounded-md px-4 py-2.5 text-right text-sm font-medium transition-colors`}
+                className={`rounded-md px-3 py-2 text-right text-xs sm:text-sm font-medium transition-colors`}
                 style={{
                   backgroundColor: selectedCategory === category.id ? '#054e49' : '',
                   color: selectedCategory === category.id ? 'white' : '',
+                  border: selectedCategory === category.id ? 'none' : '1px solid currentColor',
                 }}
               >
                 {category.name}
               </button>
             ))}
           </div>
-        </aside>
+        </div>
 
-        {/* Main Content - Azkar (على الشمال) */}
-        <main className="flex-1">
+        <div className="flex gap-6">
+          {/* Sidebar - Categories - hidden on mobile, visible on lg */}
+          <aside className="hidden lg:block w-64 shrink-0">
+            <div className="sticky top-24 space-y-2 rounded-lg border bg-card p-4">
+              <h2 className="mb-4 text-lg font-bold">الأقسام</h2>
+              {AZKAR_DATA.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`w-full rounded-md px-4 py-2.5 text-right text-sm font-medium transition-colors`}
+                  style={{
+                    backgroundColor: selectedCategory === category.id ? '#054e49' : '',
+                    color: selectedCategory === category.id ? 'white' : '',
+                  }}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          </aside>
+
+          {/* Main Content - Azkar */}
+          <main className="flex-1">
           <div className="mb-6">
             <h1 className="text-3xl font-bold">{currentCategory?.name}</h1>
             <p className="mt-2 text-muted-foreground">
@@ -302,6 +323,7 @@ export default function AzkarPage() {
             ))}
           </div>
         </main>
+        </div>
       </div>
     </div>
   );
