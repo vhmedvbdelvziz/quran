@@ -4,6 +4,7 @@ import "./globals.css";
 import { PWAInstaller } from "@/components/pwa-installer";
 import { SiteFooter } from "@/components/site-footer";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://noor-alquran.vhmedvbdelvziz.xyz";
 const siteName = "Noor Al-Quran | نور القرآن";
@@ -114,6 +115,7 @@ export default function RootLayout({
         {children}
         <SiteFooter />
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
