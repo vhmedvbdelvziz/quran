@@ -11,9 +11,14 @@ export function SiteHeader() {
   return (
     <header className="w-full border-b bg-background">
       <div className="mx-auto flex w-full max-w-6xl flex-col px-4 py-4 sm:px-6 lg:py-2">
-        <div className="grid grid-cols-3 items-center gap-3 lg:grid-cols-3">
-          <div className="flex justify-start">
-            <ThemeToggle />
+        <div className="grid grid-cols-3 items-center gap-3 lg:grid-cols-3" dir="ltr">
+          <div className="flex items-center justify-start gap-2 sm:gap-3">
+            <div className="lg:hidden">
+              <ThemeToggle />
+            </div>
+            <div className="hidden lg:block">
+              <ThemeToggle />
+            </div>
           </div>
 
           <div className="flex justify-center">
@@ -39,11 +44,7 @@ export function SiteHeader() {
             </Link>
           </div>
 
-          <div className="flex justify-end">
-            <Link href="/" className="hidden items-center gap-2 sm:gap-3 lg:flex">
-              <span className="text-sm font-bold">نور القران</span>
-              <Image src="/logo.png" alt="Noor Al-Quran Logo" width={90} height={90} priority />
-            </Link>
+          <div className="flex items-center justify-end gap-2 sm:gap-3">
             <button
               type="button"
               onClick={() => setIsMenuOpen((current) => !current)}
@@ -79,6 +80,10 @@ export function SiteHeader() {
                 </svg>
               )}
             </button>
+            <Link href="/" className="hidden items-center gap-2 sm:gap-3 lg:flex">
+              <span className="text-sm font-bold">نور القران</span>
+              <Image src="/logo.png" alt="Noor Al-Quran Logo" width={90} height={90} priority />
+            </Link>
           </div>
         </div>
 
